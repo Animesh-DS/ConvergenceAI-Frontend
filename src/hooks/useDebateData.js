@@ -1,44 +1,86 @@
-import { useState, useEffect } from 'react';
-import mockData from '../mocks/mockDebateData.json';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export function useDebateData() {
-  // 1. Create our state variables (the memory of our engine)
-  const [debateStatus, setDebateStatus] = useState("ready"); // Can be "ready", "started", or "completed"
+  const [debateStatus, setDebateStatus] = useState("ready"); 
   const [liveTurns, setLiveTurns] = useState([]);
   const [verdictData, setVerdictData] = useState(null);
+  const [error, setError] = useState(null);
 
-  // 2. The Engine Timer (Simulating the live backend)
+  // We use a ref to hold onto the active connection so we can kill it later if needed
+  const eventSourceRef = useRef(null);
+
+  const startDebate = useCallback((debateId) => {
+    setDebateStatus("started");
+    setLiveTurns([]);
+    setVerdictData(null);
+    setError(null);
+
+    // Clean up any existing connection before starting a new one
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+    }
+
+    // 1. Connect to backend using Environment Variables (Fallback to localhost for safety)
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+    const eventSource = new EventSource(`${baseUrl}/api/stream-debate/${debateId}`);
+    
+    // Store the connection in our ref
+    eventSourceRef.current = eventSource;
+
+    // 2. Catch live AI turns
+    eventSource.addEventListener('debate_turn', (event) => {
+      const turnData = JSON.parse(event.data);
+      setLiveTurns((prevTurns) => [...prevTurns, turnData]);
+    });
+
+    // 3. Catch the final verdict
+    eventSource.addEventListener('debate_end', (event) => {
+      const finalData = JSON.parse(event.data);
+      setVerdictData(finalData);
+      setDebateStatus("completed"); 
+      eventSource.close();
+      eventSourceRef.current = null;
+    });
+
+    // 4. Handle connection drops safely
+    eventSource.addEventListener('error', () => {
+      setError("Connection to the AI server was lost.");
+      setDebateStatus("ready"); 
+      eventSource.close();
+      eventSourceRef.current = null;
+    });
+
+  }, []);
+
+  const resetDebate = useCallback(() => {
+    // Kill any active connection just in case
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+    // Reset all state back to zero
+    setLiveTurns([]);
+    setVerdictData(null);
+    setError(null);
+    setDebateStatus("ready"); 
+  }, []);
+
+  // THE RESTORED EFFECT: 
+  // This guarantees the connection dies if the component completely unmounts
   useEffect(() => {
-    // If the debate hasn't started yet, do nothing.
-    if (debateStatus !== "started") return;
-
-    let currentTurnIndex = 0;
-    const totalTurns = mockData.turns.length;
-
-    // Start a timer that runs every 3 seconds (3000 milliseconds)
-    const timer = setInterval(() => {
-      if (currentTurnIndex < totalTurns) {
-        // We have a turn! Add it to our live chat array.
-        const nextTurn = mockData.turns[currentTurnIndex];
-        setLiveTurns((previousTurns) => [...previousTurns, nextTurn]);
-        currentTurnIndex++;
-      } else {
-        // No more turns left. The debate is over!
-        setDebateStatus("completed");
-        setVerdictData(mockData.finalVerdict);
-        clearInterval(timer); // Stop the timer
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
       }
-    }, 3000);
+    };
+  }, []);
 
-    // Cleanup function: stops the timer if we leave the page
-    return () => clearInterval(timer);
-  }, [debateStatus]); // This tells React to restart this effect if debateStatus changes
-
-  // 3. Export these variables so your visual Arena can use them
   return {
     debateStatus,
-    setDebateStatus,
     liveTurns,
-    verdictData
+    verdictData,
+    error,
+    startDebate,
+    resetDebate
   };
 }
