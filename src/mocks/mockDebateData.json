@@ -1,0 +1,32 @@
+{
+  "debateStatus": "completed",
+  "turns": [
+    {
+      "turn_id": "uuid-string-1",
+      "agent": "rex",
+      "round": 1,
+      "message": "The proposed timeline is entirely unrealistic given current supply chain bottlenecks.",
+      "targets": ["aria", "nova"],
+      "timestamp": "2026-06-10T14:30:00Z"
+    },
+    {
+      "turn_id": "uuid-string-2",
+      "agent": "aria",
+      "round": 1,
+      "message": "While timelines are tight, we can capture market share by launching a V1 ahead of Q2.",
+      "targets": [],
+      "timestamp": "2026-06-10T14:31:00Z"
+    }
+  ],
+  "finalVerdict": {
+    "verdict": "The project should proceed, but the launch date must be pushed back by Q2 to mitigate supply risks.",
+    "confidence": 85,
+    "summary_by_agent": {
+      "aria": "Optimistic about market capture but agreed to the timeline delay.",
+      "rex": "Successfully argued that the initial timeline would lead to catastrophic failure.",
+      "nova": "Provided historical data proving Q2 launches have higher retention.",
+      "zara": "Argued for a total pivot, but was outvoted by the consensus."
+    },
+    "winning_argument": "consensus"
+  }
+}
