@@ -1,7 +1,7 @@
 import React, { useState } from 'react'; // <-- Added useState here
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDebateData } from '../hooks/useDebateData'; 
-import FileDropzone from './FileDropzone';
+import ProblemInput from './ProblemInput';
 import AgentPanel from './AgentPanel';
 import VerdictCard from './VerdictCard';
 
@@ -11,10 +11,16 @@ const { debateStatus, liveTurns, verdictData, error, startDebate, resetDebate } 
   const [isUploading, setIsUploading] = useState(false);
 
   // <-- THE REAL UPLOAD BRIDGE
-  const handleFileUpload = async (file) => {
+  // THE NEW TEXT-TO-FILE BRIDGE
+  const handleTextSubmit = async (userInputString) => {
     setIsUploading(true);
+    
+    // 1. THE MAGIC: Convert the string into a virtual text file
+    const virtualFile = new File([userInputString], "debate_topic.txt", { type: "text/plain" });
+
+    // 2. Send it exactly like we did before!
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", virtualFile);
 
     try {
       const uploadResponse = await fetch("http://localhost:8000/api/upload", {
@@ -69,19 +75,18 @@ const { debateStatus, liveTurns, verdictData, error, startDebate, resetDebate } 
         {/* Condition 1: Ready to Upload */}
         {debateStatus === "ready" && (
           <motion.div
-            key="dropzone"
+            key="input"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="w-full max-w-2xl"
+            className="w-full max-w-3xl"
           >
-            {/* If uploading, show a temporary loading message, otherwise show the Dropzone */}
             {isUploading ? (
-               <div className="text-center text-gray-500 animate-pulse font-bold text-xl">
-                 Uploading to AI Engine...
+               <div className="text-center text-gray-500 animate-pulse font-bold text-xl p-20">
+                 Transmitting dilemma to AI Agents...
                </div>
             ) : (
-               <FileDropzone onFileUpload={handleFileUpload} />
+               <ProblemInput onSubmit={handleTextSubmit} /> 
             )}
           </motion.div>
         )}
@@ -90,8 +95,7 @@ const { debateStatus, liveTurns, verdictData, error, startDebate, resetDebate } 
         {debateStatus === "started" && (
           <motion.div
             key="arena"
-            className="flex w-full max-w-4xl flex-col gap-4 overflow-y-auto pb-20 custom-scrollbar"
-            initial={{ opacity: 0 }}
+            className="w-full max-w-5xl flex-1 min-h-0 overflow-y-auto pb-10 flex flex-col items-center"            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
