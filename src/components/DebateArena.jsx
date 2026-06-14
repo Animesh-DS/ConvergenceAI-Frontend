@@ -23,7 +23,7 @@ const { debateStatus, liveTurns, verdictData, error, startDebate, resetDebate } 
     formData.append("file", virtualFile);
 
     try {
-      const uploadResponse = await fetch("http://localhost:8000/api/upload", {
+      const uploadResponse = await fetch("https://convergenceai-backend.onrender.com/api/upload", {
         method: "POST",
         body: formData,
       });
@@ -34,7 +34,7 @@ const { debateStatus, liveTurns, verdictData, error, startDebate, resetDebate } 
       if (!uploadData.problem_id) throw new Error("Backend did not return a problem_id.");
       const problemId = uploadData.problem_id;
 
-      const startResponse = await fetch("http://localhost:8000/api/start-debate", {
+      const startResponse = await fetch("https://convergenceai-backend.onrender.com/api/start-debate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
