@@ -23,7 +23,7 @@ const { debateStatus, liveTurns, verdictData, error, startDebate, resetDebate } 
     formData.append("file", virtualFile);
 
     try {
-      const uploadResponse = await fetch("https://convergenceai-backend.onrender.com/api/upload", {
+      const uploadResponse = await fetch("https://convergenceai-backend.onrender.com/api/upload", {   
         method: "POST",
         body: formData,
       });
