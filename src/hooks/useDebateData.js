@@ -21,7 +21,7 @@ export function useDebateData() {
     }
 
     // 1. Connect to backend using Environment Variables (Fallback to localhost for safety)
-    const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+    const baseUrl = import.meta.env.VITE_BACKEND_URL || "https://convergenceai-backend.onrender.com";
     const eventSource = new EventSource(`${baseUrl}/api/stream-debate/${debateId}`);
     
     // Store the connection in our ref
